@@ -168,7 +168,7 @@ function! s:source.gather_candidates(args, context)
     endtry
 
     return map(sections, "{
-        \ 'word' : v:val[1].repeat(' ', 12-strlen(v:val[1])).': '.v:val[2],
+        \ 'word' : v:val[1] . repeat(' ', 12 - strlen(v:val[1])) . ': ' . v:val[2],
         \ 'is_multiline' : g:unite#sources#n4140#is_multiline,
         \ 'action__n4140_line' : v:val[0]
         \ }")
@@ -181,6 +181,29 @@ let s:source.action_table.n4140 = {
 function! s:source.action_table.n4140.func(candidate)
     let bufnr = s:open_n4140(a:candidate.action__n4140_line)
     call unite#remove_previewed_buffer_list(bufnr)
+endfunction
+
+let s:source.action_table.preview = {
+    \ 'description' : 'preview the section',
+    \ 'is_quit' : 0,
+    \ }
+
+function! s:source.action_table.preview.func(candidate)
+    let preview_windows = filter(range(1, winnr('$')), 'getwinvar(v:val, "&previewwindow") != 0')
+
+    if empty(preview_windows)
+        execute 'pedit!' s:get_txt_path()
+        let preview_windows = filter(range(1, winnr('$')), 'getwinvar(v:val, "&previewwindow") != 0')
+    endif
+
+    let winnr = winnr()
+    execute preview_windows[0] . 'wincmd w'
+    let bufnr = s:open_n4140(a:candidate.action__n4140_line)
+    execute winnr . 'wincmd w'
+
+    if !buflisted(bufnr)
+        call unite#add_previewed_buffer_list(bufnr)
+    endif
 endfunction
 
 function! s:source.hooks.on_syntax(args, context)
