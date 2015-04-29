@@ -111,7 +111,7 @@ function! s:cache_sections(txt) abort
     for lnum in range(1, len(contents))
         let idx = lnum - 1
 
-        let match = matchlist(contents[idx],'^\s*\([0-9.]\+\)\s\+\([^\[]\+\) \[[a-z.]\+]$')
+        let match = matchlist(contents[idx], '^\s*\([0-9.]\+\)\s\+\([^\[]\+\) \[[a-z.]\+]$')
         if len(match) >= 3 && match[2] !~# '^\s\+$'
             let sections += [
                 \   printf("%d\t%s\t%s", lnum, match[1], substitute(match[2], '\s*$','',''))
@@ -133,6 +133,31 @@ function! s:get_sections() abort
     return s:cache_sections(s:get_txt_path())
 endfunction
 
+function s:jump_to_section_under_cursor()
+    " Note:
+    " Split 'vi(' and '"gy' because of the behavior when the cursor is outside
+    " the parentheses.
+    normal! vi(
+    normal! "gy
+
+    let ref = getreg('g')
+    if ref !~# '[[:digit:].]\+'
+        echo 'unite-n4140: No reference to section is found under the cursor.'
+        return
+    endif
+
+    let sections = s:get_sections()
+    for s in sections
+        let [line, section, content] = split(s, "\t")
+        if section == ref
+            if line !=# ''
+                execute str2nr(line)
+                return
+            endif
+        endif
+    endfor
+endfunction
+
 function! s:open_n4140(line) abort
     let txt = s:get_txt_path()
     let bufnr = bufnr(unite#util#escape_file_searching(txt))
@@ -144,6 +169,7 @@ function! s:open_n4140(line) abort
         setl syntax=unite-source-N4140
         let b:current_syntax = 'n4140'
         setl nowrap nonumber nolist
+        nnoremap K :<C-u>call <SID>jump_to_section_under_cursor()<CR>
     endif
 
     execute a:line
