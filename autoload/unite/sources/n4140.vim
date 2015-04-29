@@ -8,6 +8,10 @@ let g:unite#sources#n4140#pdf_path = get(g:, 'unite#sources#n4140#pdf_path', '')
 let g:unite#sources#n4140#txt_path = get(g:, 'unite#sources#n4140#txt_path', '')
 let g:unite#sources#n4140#is_multiline = get(g:, 'unite#sources#n4140#is_multiline', 0)
 
+if !isdirectory(g:unite#sources#n4140#cache_dir)
+    call mkdir(g:unite#sources#n4140#cache_dir, 'p')
+endif
+
 let s:source = {
     \ 'name' : 'n4140',
     \ 'description' : 'quick look into N4140, Working Draft standard nearest by ISO/IEC14882:2014',
@@ -34,7 +38,7 @@ function! s:download_pdf(dir) abort
         throw s:error("'curl' or 'wget' command is required to download pdf file ")
     endif
 
-    echon 'unite-n4140: Downloading n4140.pdf...'
+    echo 'unite-n4140: Downloading n4140.pdf to ' . a:dir . '/n4140.pdf ...'
 
     let result = system(printf(cmd, a:dir . '/n4140.pdf', 'https://github.com/cplusplus/draft/raw/master/papers/n4140.pdf'))
     if v:shell_error
@@ -53,7 +57,7 @@ function! s:convert_to_txt(pdf, txt) abort
         throw s:error("'pdftotext' command is not found")
     endif
 
-    echon 'unite-n4140: Converting from pdf file to txt file...'
+    echo 'unite-n4140: Converting from pdf file to txt file...'
 
     let result = system(printf('pdftotext -layout -nopgbrk %s - > %s', a:pdf, a:txt))
     if v:shell_error
@@ -109,7 +113,9 @@ function! s:cache_sections(txt) abort
 
         let match = matchlist(contents[idx],'^\s*\([0-9.]\+\)\s\+\([^\[]\+\) \[[a-z.]\+]$')
         if len(match) >= 3 && match[2] !~# '^\s\+$'
-            let sections += [linum."\t".match[1]."\t".substitute(match[2], '\s*$','','')]
+            let sections += [
+                \   printf("%d\t%s\t%s", lnum, match[1], substitute(match[2], '\s*$','',''))
+                \ ]
         endif
     endfor
 
