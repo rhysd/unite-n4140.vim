@@ -12,7 +12,7 @@ syntax match uniteN4140NoteNotice       /Note:/ contained display
 syntax match uniteN4140Item             /—/ display
 syntax match uniteN4140StdName          /std::\h[[:alnum:]_:]*/ display
 syntax match uniteN4140FuncName         /\h\w*(\@=/ display
-syntax match uniteN4140Ref              /\_^\@<!([[:digit:].]\+)/ display
+syntax match uniteN4140Ref              /\%(\_^\s*\)\@<!([[:digit:].]\+)/ display
 
 if has('conceal')
     syntax match uniteN4140Footer           /^\s*§\s[0-9\.]\+\s\+\d\+$/ conceal
