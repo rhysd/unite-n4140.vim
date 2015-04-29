@@ -151,6 +151,13 @@ function! s:open_n4140(line) abort
     return bufnr
 endfunction
 
+function! s:highlight_candidates()
+    syntax match uniteSource__N4140_Number /\d[0-9\.]*/ contained containedin=uniteSource__N4140 nextgroup=uniteSource__N4140_Separator
+    syntax match uniteSource__N4140_Separator /:/ contained containedin=uniteSource__N4140
+    highlight default link uniteSource__N4140_Number Type
+    highlight default link uniteSource__N4140_Separator Type
+endfunction
+
 function! s:source.gather_candidates(args, context)
     try
         let sections = map(s:get_sections(), "split(v:val,'\t')")
@@ -174,6 +181,10 @@ let s:source.action_table.n4140 = {
 function! s:source.action_table.n4140.func(candidate)
     let bufnr = s:open_n4140(a:candidate.action__n4140_line)
     call unite#remove_previewed_buffer_list(bufnr)
+endfunction
+
+function! s:source.hooks.on_syntax(args, context)
+    call s:highlight_candidates()
 endfunction
 
 let &cpo = s:save_cpo
